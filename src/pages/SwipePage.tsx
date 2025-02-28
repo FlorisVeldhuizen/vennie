@@ -46,6 +46,7 @@ const SwipePage = () => {
   }, [items.length, isLoadingItems, fetchItems])
   
   const currentItem = items[currentIndex]
+  const nextItem = items[currentIndex + 1]
   const isFinished = !currentItem || currentIndex >= items.length
   
   // Reset card position
@@ -310,26 +311,53 @@ const SwipePage = () => {
         ) : (
           <div 
             className="h-full w-full select-none"
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
             style={{ touchAction: 'none' }}
           >
-            <FurnitureCard
-              key={currentItem.id}
-              item={currentItem}
-              isDragging={isDragging}
-              dragAmount={dragAmount}
-              dragAmountY={dragAmountY}
-              onRest={() => {}}
-              isExiting={isExiting}
-              exitDirection={exitDirection || undefined}
-              swipeThreshold={SWIPE_THRESHOLD}
-              isHovering={isHovering}
-            />
+            {/* Next card (shown behind current card) */}
+            {nextItem && (
+              <div 
+                className={`absolute inset-0 z-0 transform translate-y-2 scale-[0.98] transition-transform duration-300 ${
+                  isExiting ? 'translate-y-0 scale-100' : ''
+                }`}
+              >
+                <FurnitureCard
+                  key={`next-${nextItem.id}`}
+                  item={nextItem}
+                  isDragging={false}
+                  dragAmount={0}
+                  dragAmountY={0}
+                  onRest={() => {}}
+                  isExiting={false}
+                  swipeThreshold={SWIPE_THRESHOLD}
+                  isHovering={false}
+                  isNextCard={true}
+                />
+              </div>
+            )}
+            
+            {/* Current card (top layer) */}
+            <div 
+              className="absolute inset-0 z-10"
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
+              <FurnitureCard
+                key={currentItem.id}
+                item={currentItem}
+                isDragging={isDragging}
+                dragAmount={dragAmount}
+                dragAmountY={dragAmountY}
+                onRest={() => {}}
+                isExiting={isExiting}
+                exitDirection={exitDirection || undefined}
+                swipeThreshold={SWIPE_THRESHOLD}
+                isHovering={isHovering}
+              />
+            </div>
           </div>
         )}
       </div>

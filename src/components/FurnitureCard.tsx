@@ -11,6 +11,7 @@ interface FurnitureCardProps {
   exitDirection?: 'left' | 'right'
   swipeThreshold: number
   isHovering?: boolean
+  isNextCard?: boolean
 }
 
 const FurnitureCard = ({ 
@@ -22,7 +23,8 @@ const FurnitureCard = ({
   isExiting = false,
   exitDirection,
   swipeThreshold,
-  isHovering = false
+  isHovering = false,
+  isNextCard = false
 }: FurnitureCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null)
   const prevDraggingRef = useRef(isDragging)
@@ -48,6 +50,15 @@ const FurnitureCard = ({
   
   // Get transform style based on state
   const getTransform = () => {
+    // Next card styling
+    if (isNextCard) {
+      return `
+        translateY(0)
+        scale(1)
+        rotate(0deg)
+      `;
+    }
+    
     // Exit animation
     if (isExiting) {
       const direction = exitDirection === 'left' ? -1 : 1;
@@ -76,6 +87,7 @@ const FurnitureCard = ({
   const getTransitionTiming = () => {
     if (isDragging) return 'none';
     if (isExiting) return 'transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1)';
+    if (isNextCard) return 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
     return 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease';
   };
   
@@ -89,7 +101,9 @@ const FurnitureCard = ({
   
   // Get shadow based on state
   const getShadow = () => {
-    if (isDragging) {
+    if (isNextCard) {
+      return '0 5px 20px rgba(0, 0, 0, 0.1)';
+    } else if (isDragging) {
       return '0 25px 40px rgba(0, 0, 0, 0.2)';
     } else if (isHovering) {
       return '0 20px 35px rgba(0, 0, 0, 0.15)';
@@ -102,7 +116,7 @@ const FurnitureCard = ({
     <div 
       ref={cardRef}
       className={`card h-full overflow-hidden flex flex-col rounded-2xl ${
-        isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        isDragging ? 'cursor-grabbing' : isNextCard ? '' : 'cursor-grab'
       }`}
       style={{
         transform: getTransform(),
@@ -111,10 +125,12 @@ const FurnitureCard = ({
         userSelect: 'none',
         WebkitUserSelect: 'none',
         position: 'relative',
-        zIndex: 10,
+        zIndex: isNextCard ? 5 : 10,
         background: 'white',
         border: '1px solid rgba(0,0,0,0.05)',
         transformOrigin: 'center center',
+        filter: isNextCard ? 'brightness(0.98) saturate(0.9)' : 'none',
+        pointerEvents: isNextCard ? 'none' : 'auto',
       }}
     >
       <div className="relative flex-grow overflow-hidden">
@@ -125,17 +141,19 @@ const FurnitureCard = ({
           draggable="false"
         />
         
-        {/* Main indicator */}
-        <div 
-          className={`absolute top-1/2 right-1/2 transform translate-x-1/2 -translate-y-1/2 bg-gradient-to-br ${indicatorColor} text-white rounded-full py-4 px-8 text-3xl font-bold pointer-events-none shadow-lg transition-all duration-300`}
-          style={{ 
-            zIndex: 20,
-            opacity: showIndicator ? 1 : thresholdRatio * 0.7,
-            transform: `translate(50%, -50%) scale(${showIndicator ? 1 : 0.8 + thresholdRatio * 0.2})`,
-          }}
-        >
-          {indicatorType}
-        </div>
+        {/* Main indicator - only show on current card */}
+        {!isNextCard && (
+          <div 
+            className={`absolute top-1/2 right-1/2 transform translate-x-1/2 -translate-y-1/2 bg-gradient-to-br ${indicatorColor} text-white rounded-full py-4 px-8 text-3xl font-bold pointer-events-none shadow-lg transition-all duration-300`}
+            style={{ 
+              zIndex: 20,
+              opacity: showIndicator ? 1 : thresholdRatio * 0.7,
+              transform: `translate(50%, -50%) scale(${showIndicator ? 1 : 0.8 + thresholdRatio * 0.2})`,
+            }}
+          >
+            {indicatorType}
+          </div>
+        )}
         
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-6 backdrop-blur-sm">
           <h3 className="text-2xl font-bold text-white">{item.title}</h3>
