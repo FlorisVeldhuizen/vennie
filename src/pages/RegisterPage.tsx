@@ -39,7 +39,7 @@ const RegisterPage = () => {
     
     try {
       await register(email, password, name)
-      navigate('/')
+      navigate('/swipe')
     } catch (error) {
       console.error('Registration error:', error)
     } finally {

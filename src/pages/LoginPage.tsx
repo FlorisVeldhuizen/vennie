@@ -20,7 +20,7 @@ const LoginPage = () => {
     
     try {
       await login(email, password)
-      navigate('/')
+      navigate('/swipe')
     } catch (error) {
       console.error('Login error:', error)
     } finally {
