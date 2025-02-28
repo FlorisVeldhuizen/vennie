@@ -15,6 +15,10 @@
     --color-primary-800: 7 89 133;
     --color-primary-900: 12 74 110;
     --color-primary-950: 8 47 73;
+    
+    /* Toast variables */
+    --toast-bg: #ffffff;
+    --toast-color: #1f2937;
   }
   
   html.dark {
@@ -29,6 +33,10 @@
     --color-primary-800: 186 230 253;
     --color-primary-900: 224 242 254;
     --color-primary-950: 240 249 255;
+    
+    /* Toast variables */
+    --toast-bg: #374151;
+    --toast-color: #ffffff;
   }
   
   html {
@@ -93,6 +101,29 @@
   }
   100% {
     transform: translateX(0) rotate(0deg);
+  }
+}
+
+/* Card entrance animation for next card becoming current */
+@keyframes card-enter {
+  0% {
+    transform: scale(0.95) translateY(10px);
+    opacity: 0.8;
+    filter: blur(2px);
+  }
+  40% {
+    transform: scale(1.01) translateY(-2px);
+    opacity: 0.95;
+    filter: blur(0px);
+  }
+  70% {
+    transform: scale(0.99) translateY(1px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    filter: blur(0px);
   }
 }
 

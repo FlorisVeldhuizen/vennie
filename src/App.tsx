@@ -20,6 +20,24 @@ function App() {
   const { setCurrentUser, fetchItems } = useStore()
   const [isAuthChecked, setIsAuthChecked] = useState(false)
 
+  // Initialize dark mode on app load
+  useEffect(() => {
+    // Check localStorage first
+    const savedDarkMode = localStorage.getItem('darkMode')
+    
+    if (savedDarkMode === 'true') {
+      document.documentElement.classList.add('dark')
+    } else if (savedDarkMode === 'false') {
+      document.documentElement.classList.remove('dark')
+    } else {
+      // If no saved preference, check system preference
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      if (prefersDark) {
+        document.documentElement.classList.add('dark')
+      }
+    }
+  }, [])
+
   // Check for authenticated user on app load and subscribe to auth changes
   useEffect(() => {
     const initializeApp = async () => {
@@ -78,7 +96,15 @@ function App() {
 
   return (
     <Router>
-      <Toaster position="top-center" />
+      <Toaster 
+        position="top-center" 
+        toastOptions={{
+          style: {
+            background: 'var(--toast-bg, #ffffff)',
+            color: 'var(--toast-color, #1f2937)',
+          },
+        }}
+      />
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />

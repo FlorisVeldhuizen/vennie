@@ -2,6 +2,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { signOut } from '../lib/supabase'
 import { useState } from 'react'
+import DarkModeToggle from './DarkModeToggle'
 
 const Layout = () => {
   const { currentUser, setCurrentUser } = useStore()
@@ -32,23 +33,30 @@ const Layout = () => {
             </span>
           </Link>
           
-          {/* Mobile menu button */}
-          <button 
-            className="md:hidden text-gray-600 hover:text-primary-600 focus:outline-none"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              {isMobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
+          <div className="flex items-center">
+            {/* Mobile menu button */}
+            <button 
+              className="md:hidden text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 focus:outline-none"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {isMobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
           
           {/* Desktop navigation */}
           <nav className="hidden md:block">
             <ul className="flex gap-6 items-center">
+              {/* Dark Mode Toggle - Always visible */}
+              <li>
+                <DarkModeToggle />
+              </li>
+              
               {currentUser ? (
                 <>
                   <li>
@@ -128,6 +136,14 @@ const Layout = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden bg-white dark:bg-gray-800 shadow-lg">
             <ul className="py-2 px-4 space-y-3">
+              {/* Dark Mode Toggle - Always visible in mobile menu */}
+              <li className="flex items-center justify-between py-2">
+                <span className="font-medium text-gray-600 dark:text-gray-300">Dark Mode</span>
+                <DarkModeToggle />
+              </li>
+              
+              <li className="border-t border-gray-200 dark:border-gray-700 my-2"></li>
+              
               {currentUser ? (
                 <>
                   <li>
