@@ -2,12 +2,10 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { toast } from 'react-hot-toast'
-import { signIn, getCurrentUser } from '../lib/supabase'
-import { useStore } from '../store/useStore'
+import { signIn } from '../lib/supabase'
 
 const LoginPage = () => {
   const navigate = useNavigate()
-  const { setCurrentUser } = useStore()
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -30,19 +28,9 @@ const LoginPage = () => {
         throw error
       }
       
-      // Get the current user
-      const user = await getCurrentUser()
-      
-      if (user) {
-        // Update the store with the current user
-        setCurrentUser({
-          id: user.id,
-          name: user.name || 'User'
-        })
-        
-        toast.success('Signed in successfully!')
-        navigate('/swipe')
-      }
+      // Auth state will be handled by the subscription in App.tsx
+      toast.success('Signed in successfully!')
+      navigate('/swipe')
     } catch (error: unknown) {
       console.error('Login error:', error)
       if (error instanceof Error) {

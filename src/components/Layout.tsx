@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { signOut } from '../lib/supabase'
 import { useState } from 'react'
@@ -6,11 +6,15 @@ import { useState } from 'react'
 const Layout = () => {
   const { currentUser, setCurrentUser } = useStore()
   const location = useLocation()
+  const navigate = useNavigate()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const handleSignOut = async () => {
     await signOut()
+    // The auth state will be handled by the subscription in App.tsx
+    // but we'll also update the local state for immediate UI feedback
     setCurrentUser(null)
+    navigate('/')
   }
   
   const isActive = (path: string) => {

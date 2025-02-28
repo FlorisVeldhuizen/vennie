@@ -6,7 +6,14 @@ import { FurnitureItem } from '../store/useStore'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-supabase-url.supabase.co'
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key'
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Create Supabase client with persistence enabled
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    storageKey: 'vennie-auth-storage-key',
+    autoRefreshToken: true,
+  }
+})
 
 // Types for authentication
 export type AuthUser = {
@@ -48,6 +55,26 @@ export const signOut = async () => {
 
 export const resetPassword = async (email: string) => {
   return supabase.auth.resetPasswordForEmail(email)
+}
+
+// Helper function to subscribe to auth state changes
+export const subscribeToAuthChanges = (
+  callback: (user: AuthUser | null) => void
+) => {
+  return supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      if (session?.user) {
+        const user: AuthUser = {
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata.name || session.user.email?.split('@')[0] || 'User'
+        }
+        callback(user)
+      }
+    } else if (event === 'SIGNED_OUT') {
+      callback(null)
+    }
+  })
 }
 
 // Furniture items functions

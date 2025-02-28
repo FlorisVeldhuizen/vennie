@@ -18,6 +18,7 @@ const SwipePage = () => {
   const [exitDirection, setExitDirection] = useState<'left' | 'right' | null>(null)
   const [activeButton, setActiveButton] = useState<'left' | 'right' | null>(null)
   const [isHovering, setIsHovering] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false)
   
   // Refs for drag tracking
   const startX = useRef(0)
@@ -34,9 +35,14 @@ const SwipePage = () => {
   
   // Ensure we have furniture items
   useEffect(() => {
-    if (items.length === 0 && !isLoadingItems) {
-      fetchItems()
+    const initializeData = async () => {
+      if (items.length === 0 && !isLoadingItems) {
+        await fetchItems()
+      }
+      setIsInitialized(true)
     }
+    
+    initializeData()
   }, [items.length, isLoadingItems, fetchItems])
   
   const currentItem = items[currentIndex]
@@ -283,7 +289,7 @@ const SwipePage = () => {
       tabIndex={0}
     >
       <div className="relative h-[550px] w-full max-w-sm mx-auto">
-        {isLoadingItems ? (
+        {isLoadingItems || !isInitialized ? (
           <div className="card p-10 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-xl">
             <div className="text-6xl mb-6">⏳</div>
             <h2 className="text-2xl font-bold mb-4 text-primary-600 dark:text-primary-400">Loading furniture...</h2>
@@ -328,7 +334,7 @@ const SwipePage = () => {
         )}
       </div>
       
-      {!isLoadingItems && !isFinished && (
+      {!isLoadingItems && !isFinished && isInitialized && (
         <div className="flex justify-center gap-6 mt-6">
           <button 
             className={`btn bg-gradient-to-r ${
@@ -357,7 +363,7 @@ const SwipePage = () => {
         </div>
       )}
       
-      {!isLoadingItems && !isFinished && (
+      {!isLoadingItems && !isFinished && isInitialized && (
         <div className="mt-6 w-full max-w-sm mx-auto px-4">
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
             <div 
