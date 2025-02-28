@@ -1,129 +1,216 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import SwipeCard from '../components/ui/SwipeCard'
 import { useStore } from '../store/useStore'
+import FurnitureCard from '../components/FurnitureCard'
+import { toast } from 'react-hot-toast'
 
 const SwipePage = () => {
-  const navigate = useNavigate()
+  const { items, currentUser, addUserLike, fetchUserLikes } = useStore()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [direction, setDirection] = useState<string | null>(null)
   
-  // Get data from the store
-  const items = useStore(state => state.items)
-  const currentUser = useStore(state => state.currentUser)
-  const addUserLike = useStore(state => state.addUserLike)
+  // Mouse/touch dragging state
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStartX, setDragStartX] = useState(0)
+  const [dragAmount, setDragAmount] = useState(0)
+  const cardRef = useRef<HTMLDivElement>(null)
   
-  const currentItem = items[currentIndex]
-  const isFinished = currentIndex >= items.length
-  
-  // Simulate loading of furniture items
+  // Threshold for swipe action (in pixels)
+  const SWIPE_THRESHOLD = 100
+
   useEffect(() => {
+    // Simulate loading
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 1000)
-    
+
+    // Fetch user likes if we have a current user
+    if (currentUser) {
+      fetchUserLikes(currentUser.id)
+    }
+
     return () => clearTimeout(timer)
-  }, [])
-  
-  const handleSwipe = (direction: 'left' | 'right') => {
-    const item = items[currentIndex]
+  }, [currentUser, fetchUserLikes])
+
+  const handleSwipe = (dir: string) => {
+    setDirection(dir)
     
-    if (direction === 'right' && currentUser) {
-      // Add to likes if swiped right
-      addUserLike(item.id)
+    // If swiping right, add to likes
+    if (dir === 'right' && items[currentIndex]) {
+      addUserLike(items[currentIndex].id)
+      toast.success('Added to likes!')
     }
     
-    // Move to the next item after a short delay
+    // Wait for animation to complete before changing index
     setTimeout(() => {
       setCurrentIndex(prev => prev + 1)
+      setDirection(null)
     }, 300)
   }
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isLoading || currentIndex >= items.length) return
+      
+      if (e.key === 'ArrowLeft') {
+        handleSwipe('left')
+      } else if (e.key === 'ArrowRight') {
+        handleSwipe('right')
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isLoading, currentIndex, items.length])
   
-  const handleViewMatches = () => {
-    navigate('/matches')
+  // Mouse/touch event handlers
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    if (isLoading || currentIndex >= items.length) return
+    
+    setIsDragging(true)
+    // Get the starting X position (handle both mouse and touch events)
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    setDragStartX(clientX)
   }
   
+  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging) return
+    
+    // Get the current X position
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    const deltaX = clientX - dragStartX
+    
+    setDragAmount(deltaX)
+    
+    // Prevent default to avoid text selection during drag
+    e.preventDefault()
+  }
+  
+  const handleDragEnd = () => {
+    if (!isDragging) return
+    
+    setIsDragging(false)
+    
+    // If dragged beyond threshold, trigger swipe
+    if (Math.abs(dragAmount) >= SWIPE_THRESHOLD) {
+      const direction = dragAmount > 0 ? 'right' : 'left'
+      handleSwipe(direction)
+    }
+    
+    // Reset drag amount
+    setDragAmount(0)
+  }
+  
+  // Add event listeners for mouse/touch events
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        handleDragMove(e as unknown as React.MouseEvent)
+      }
+    }
+    
+    const handleMouseUp = () => {
+      if (isDragging) {
+        handleDragEnd()
+      }
+    }
+    
+    // Add global event listeners
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+    window.addEventListener('touchmove', handleMouseMove as unknown as (e: TouchEvent) => void, { passive: false })
+    window.addEventListener('touchend', handleMouseUp)
+    
+    return () => {
+      // Clean up event listeners
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+      window.removeEventListener('touchmove', handleMouseMove as unknown as (e: TouchEvent) => void)
+      window.removeEventListener('touchend', handleMouseUp)
+    }
+  }, [isDragging, dragStartX])
+
   if (isLoading) {
     return (
-      <div className="container-app py-8 flex justify-center items-center min-h-[500px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Loading furniture...</p>
-        </div>
+      <div className="container-app py-8 flex justify-center items-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
       </div>
     )
   }
-  
+
+  if (currentIndex >= items.length) {
+    return (
+      <div className="container-app py-8 text-center">
+        <h2 className="text-2xl font-bold mb-4">You've seen all items!</h2>
+        <p className="mb-6">Check back later for more furniture options.</p>
+        <Link to="/matches" className="btn btn-primary">View Your Matches</Link>
+      </div>
+    )
+  }
+
   return (
     <div className="container-app py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-primary-600 mb-2">Find Furniture You Love</h1>
+      <div className="mb-6 text-center">
+        <h1 className="text-3xl font-bold mb-2">Swipe Furniture</h1>
         <p className="text-gray-600 dark:text-gray-300">
-          Swipe right if you like it, left if you don't
+          Swipe right to like, left to pass
         </p>
       </div>
       
-      <div className="relative h-[500px] w-full max-w-sm mx-auto">
-        <AnimatePresence>
-          {isFinished ? (
-            <motion.div
-              key="finished"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="card p-8 text-center"
-            >
-              <h2 className="text-2xl font-bold mb-4">You're all caught up!</h2>
-              <p className="mb-4">You've gone through all available items.</p>
-              <button 
-                className="btn btn-primary"
-                onClick={handleViewMatches}
+      <div className="flex justify-center mb-8">
+        <div 
+          ref={cardRef}
+          className="relative w-full max-w-md aspect-[3/4]"
+          onMouseDown={handleDragStart}
+          onTouchStart={handleDragStart}
+        >
+          <AnimatePresence>
+            {!direction && (
+              <motion.div
+                key={currentIndex}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ 
+                  opacity: 0,
+                  x: direction === 'left' ? -300 : direction === 'right' ? 300 : 0,
+                  rotate: direction === 'left' ? -20 : direction === 'right' ? 20 : 0
+                }}
+                transition={{ duration: 0.3 }}
+                className="absolute inset-0"
               >
-                View Matches
-              </button>
-            </motion.div>
-          ) : (
-            <SwipeCard
-              key={currentItem.id}
-              imageUrl={currentItem.imageUrl}
-              title={currentItem.title}
-              description={currentItem.description}
-              price={currentItem.price}
-              onSwipe={handleSwipe}
-            />
-          )}
-        </AnimatePresence>
+                <FurnitureCard 
+                  item={items[currentIndex]} 
+                  isDragging={isDragging}
+                  dragAmount={dragAmount}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
       
-      {!isFinished && (
-        <div className="flex justify-center gap-4 mt-8">
-          <motion.button 
-            className="btn bg-red-500 text-white hover:bg-red-600 rounded-full w-16 h-16 flex items-center justify-center shadow-lg"
-            onClick={() => handleSwipe('left')}
-            whileTap={{ scale: 0.9 }}
-          >
-            ✕
-          </motion.button>
-          <motion.button 
-            className="btn bg-green-500 text-white hover:bg-green-600 rounded-full w-16 h-16 flex items-center justify-center shadow-lg"
-            onClick={() => handleSwipe('right')}
-            whileTap={{ scale: 0.9 }}
-          >
-            ♥
-          </motion.button>
-        </div>
-      )}
+      <div className="flex justify-center gap-4">
+        <button
+          onClick={() => handleSwipe('left')}
+          className="btn btn-secondary px-8"
+          aria-label="Dislike"
+        >
+          ✕
+        </button>
+        <button
+          onClick={() => handleSwipe('right')}
+          className="btn btn-primary px-8"
+          aria-label="Like"
+        >
+          ♥
+        </button>
+      </div>
       
-      <div className="mt-8 text-center text-gray-500">
-        <p>{currentIndex} of {items.length} items viewed</p>
-        
-        {/* Progress bar */}
-        <div className="w-full max-w-sm mx-auto mt-2 bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-          <div 
-            className="bg-primary-500 h-2.5 rounded-full" 
-            style={{ width: `${(currentIndex / items.length) * 100}%` }}
-          ></div>
-        </div>
+      <div className="mt-6 text-center text-sm text-gray-500">
+        <p>Tip: You can also use the left and right arrow keys or drag with your mouse</p>
       </div>
     </div>
   )
