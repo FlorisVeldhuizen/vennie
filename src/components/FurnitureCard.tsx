@@ -1,16 +1,16 @@
 import { FurnitureItem } from '../store/useStore'
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect } from 'react'
 
 interface FurnitureCardProps {
   item: FurnitureItem
   isDragging?: boolean
   dragAmount?: number
   dragAmountY?: number
-  dragVelocity?: number
   onRest?: () => void
   isExiting?: boolean
   exitDirection?: 'left' | 'right'
   swipeThreshold: number
+  isHovering?: boolean
 }
 
 const FurnitureCard = ({ 
@@ -18,82 +18,37 @@ const FurnitureCard = ({
   isDragging = false, 
   dragAmount = 0,
   dragAmountY = 0,
-  dragVelocity = 0,
   onRest,
   isExiting = false,
   exitDirection,
-  swipeThreshold
+  swipeThreshold,
+  isHovering = false
 }: FurnitureCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null)
-  const [isResting, setIsResting] = useState(true)
-  const [wobbleDirection, setWobbleDirection] = useState<'left' | 'right' | null>(null)
+  const prevDraggingRef = useRef(isDragging)
   
-  // Calculate rotation based on drag amount and velocity for more dynamic feel
-  const rotationX = Math.min(Math.max(dragAmountY * 0.05, -10), 10)
-  const rotationZ = Math.min(Math.max((dragAmount * 0.05) + (dragVelocity * 0.1), -20), 20)
+  // Calculate rotation based on drag amount for dynamic feel
+  const rotationDegrees = Math.min(Math.max((dragAmount * 0.05), -15), 15)
   
   // Calculate opacity for like/dislike indicators based on threshold
   const thresholdRatio = Math.min(Math.abs(dragAmount) / swipeThreshold, 1)
   
-  // Dynamic shadow based on height and drag
-  const shadowSize = 20 + Math.abs(dragAmountY) * 0.2 + Math.abs(dragAmount) * 0.05
-  const shadowBlur = 30 + Math.abs(dragAmount) * 0.1 + Math.abs(dragVelocity) * 0.2
-  
-  // Determine wobble direction based on where the card was last dragged
+  // Call onRest when dragging ends
   useEffect(() => {
-    if (isDragging) {
-      setIsResting(false);
-      setWobbleDirection(null);
-    } else if (!isResting && Math.abs(dragAmount) < 5) {
-      // Card was released - determine wobble direction based on last movement
-      if (dragVelocity > 1) {
-        setWobbleDirection('right');
-      } else if (dragVelocity < -1) {
-        setWobbleDirection('left');
-      } else {
-        setWobbleDirection(null);
-      }
-      
-      // Reset to resting state after animation completes
+    if (!isDragging && prevDraggingRef.current && onRest) {
       const timer = setTimeout(() => {
-        setIsResting(true);
-        if (onRest) onRest();
-      }, 500);
+        onRest();
+      }, 300);
       
       return () => clearTimeout(timer);
     }
-  }, [isDragging, dragAmount, dragVelocity, isResting, onRest]);
-  
-  // Get the appropriate wobble animation class
-  const getWobbleClass = () => {
-    if (isDragging || !isResting || isExiting) return '';
     
-    if (wobbleDirection === 'right') {
-      return 'wobble-right-animation';
-    } else if (wobbleDirection === 'left') {
-      return 'wobble-left-animation';
-    } else if (Math.abs(dragAmount) < 5) {
-      return 'float-animation';
-    }
-    
-    return '';
-  };
-  
-  // Calculate transition timing based on velocity
-  const getTransitionTiming = () => {
-    if (isDragging) return 'none';
-    if (isExiting) return 'transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1)';
-    
-    // Faster snap-back when released with higher velocity
-    const velocityFactor = Math.min(Math.abs(dragVelocity) * 0.001, 0.3);
-    const duration = Math.max(0.3 - velocityFactor, 0.15);
-    
-    // Use spring physics for more natural movement
-    return `transform ${duration}s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease`;
-  };
+    prevDraggingRef.current = isDragging;
+  }, [isDragging, onRest]);
   
   // Get transform style based on state
   const getTransform = () => {
+    // Exit animation
     if (isExiting) {
       const direction = exitDirection === 'left' ? -1 : 1;
       const distance = window.innerWidth * 1.5;
@@ -105,12 +60,23 @@ const FurnitureCard = ({
       `;
     }
     
+    // Base lift effect (applied during hover or dragging)
+    const liftAmount = (isHovering || isDragging) ? -8 : 0;
+    
+    // Combine translation, rotation and lift
     return `
       translateX(${dragAmount}px) 
-      translateY(${dragAmountY * 0.5}px) 
-      rotate3d(1, 0, 0, ${rotationX}deg) 
-      rotateZ(${rotationZ}deg)
+      translateY(${dragAmountY * 0.5 + liftAmount}px) 
+      rotate(${rotationDegrees}deg)
+      scale(${isDragging ? 1.03 : isHovering ? 1.02 : 1})
     `;
+  };
+  
+  // Get transition timing
+  const getTransitionTiming = () => {
+    if (isDragging) return 'none';
+    if (isExiting) return 'transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1)';
+    return 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease';
   };
   
   // Determine if we should show the LIKE/PASS indicator prominently
@@ -121,17 +87,26 @@ const FurnitureCard = ({
     ? 'from-green-400 to-green-600' 
     : 'from-red-400 to-red-600';
   
+  // Get shadow based on state
+  const getShadow = () => {
+    if (isDragging) {
+      return '0 25px 40px rgba(0, 0, 0, 0.2)';
+    } else if (isHovering) {
+      return '0 20px 35px rgba(0, 0, 0, 0.15)';
+    } else {
+      return '0 10px 30px rgba(0, 0, 0, 0.1)';
+    }
+  };
+  
   return (
     <div 
       ref={cardRef}
       className={`card h-full overflow-hidden flex flex-col rounded-2xl ${
-        isDragging ? 'cursor-grabbing' : 'cursor-grab hover:shadow-2xl hover:-translate-y-3'
-      } ${getWobbleClass()}`}
+        isDragging ? 'cursor-grabbing' : 'cursor-grab'
+      }`}
       style={{
         transform: getTransform(),
-        boxShadow: isDragging 
-          ? `0 ${shadowSize}px ${shadowBlur}px rgba(0, 0, 0, 0.2)` 
-          : '0 10px 30px rgba(0, 0, 0, 0.1)',
+        boxShadow: getShadow(),
         transition: getTransitionTiming(),
         userSelect: 'none',
         WebkitUserSelect: 'none',

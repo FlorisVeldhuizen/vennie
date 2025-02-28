@@ -17,18 +17,30 @@ const SwipePage = () => {
   const [isExiting, setIsExiting] = useState(false)
   const [exitDirection, setExitDirection] = useState<'left' | 'right' | null>(null)
   const [activeButton, setActiveButton] = useState<'left' | 'right' | null>(null)
+  const [isHovering, setIsHovering] = useState(false)
   
   // Refs for drag tracking
   const startX = useRef(0)
   const startY = useRef(0)
+  const lastX = useRef(0)
+  const lastTimestamp = useRef(0)
   
   // Get data from the store
   const items = useStore(state => state.items)
   const currentUser = useStore(state => state.currentUser)
   const addUserLike = useStore(state => state.addUserLike)
+  const fetchItems = useStore(state => state.fetchItems)
+  const isLoadingItems = useStore(state => state.isLoadingItems)
+  
+  // Ensure we have furniture items
+  useEffect(() => {
+    if (items.length === 0 && !isLoadingItems) {
+      fetchItems()
+    }
+  }, [items.length, isLoadingItems, fetchItems])
   
   const currentItem = items[currentIndex]
-  const isFinished = currentIndex >= items.length
+  const isFinished = !currentItem || currentIndex >= items.length
   
   // Reset card position
   const resetCard = useCallback(() => {
@@ -36,6 +48,31 @@ const SwipePage = () => {
     setDragAmountY(0)
     setActiveButton(null)
   }, [])
+  
+  // Preload next images
+  const preloadNextImages = useCallback(() => {
+    // Preload the next few images
+    const preloadCount = 3;
+    const imagesToPreload = [];
+    
+    for (let i = 1; i <= preloadCount; i++) {
+      const nextIndex = currentIndex + i;
+      if (nextIndex < items.length) {
+        imagesToPreload.push(items[nextIndex].imageUrl);
+      }
+    }
+    
+    // Create image objects to trigger browser preloading
+    imagesToPreload.forEach(imageUrl => {
+      const img = new Image();
+      img.src = imageUrl;
+    });
+  }, [currentIndex, items]);
+  
+  // Preload images when current index changes
+  useEffect(() => {
+    preloadNextImages();
+  }, [currentIndex, preloadNextImages]);
   
   // Handle swipe action
   const handleSwipe = useCallback((direction: 'left' | 'right') => {
@@ -130,6 +167,8 @@ const SwipePage = () => {
     
     startX.current = e.clientX
     startY.current = e.clientY
+    lastX.current = e.clientX
+    lastTimestamp.current = performance.now()
     setIsDragging(true)
   }
   
@@ -170,6 +209,8 @@ const SwipePage = () => {
     
     startX.current = e.touches[0].clientX
     startY.current = e.touches[0].clientY
+    lastX.current = e.touches[0].clientX
+    lastTimestamp.current = performance.now()
     setIsDragging(true)
   }
   
@@ -204,6 +245,17 @@ const SwipePage = () => {
     }
   }
   
+  // Mouse hover handlers
+  const handleMouseEnter = () => {
+    if (!isDragging && !isAnimating) {
+      setIsHovering(true)
+    }
+  }
+  
+  const handleMouseLeave = () => {
+    setIsHovering(false)
+  }
+  
   // Set up event listeners for mouse dragging
   useEffect(() => {
     document.addEventListener('mousemove', handleMouseMove)
@@ -231,7 +283,13 @@ const SwipePage = () => {
       tabIndex={0}
     >
       <div className="relative h-[550px] w-full max-w-sm mx-auto">
-        {isFinished ? (
+        {isLoadingItems ? (
+          <div className="card p-10 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-xl">
+            <div className="text-6xl mb-6">⏳</div>
+            <h2 className="text-2xl font-bold mb-4 text-primary-600 dark:text-primary-400">Loading furniture...</h2>
+            <p className="mb-6 text-gray-600 dark:text-gray-300">Please wait while we prepare some amazing furniture for you.</p>
+          </div>
+        ) : isFinished ? (
           <div className="card p-10 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-xl transform transition-all duration-500 hover:scale-105">
             <div className="text-6xl mb-6">🎉</div>
             <h2 className="text-3xl font-bold mb-4 text-primary-600 dark:text-primary-400">You're all caught up!</h2>
@@ -250,6 +308,8 @@ const SwipePage = () => {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
             style={{ touchAction: 'none' }}
           >
             <FurnitureCard
@@ -262,12 +322,13 @@ const SwipePage = () => {
               isExiting={isExiting}
               exitDirection={exitDirection || undefined}
               swipeThreshold={SWIPE_THRESHOLD}
+              isHovering={isHovering}
             />
           </div>
         )}
       </div>
       
-      {!isFinished && (
+      {!isLoadingItems && !isFinished && (
         <div className="flex justify-center gap-6 mt-6">
           <button 
             className={`btn bg-gradient-to-r ${
@@ -296,7 +357,7 @@ const SwipePage = () => {
         </div>
       )}
       
-      {!isFinished && (
+      {!isLoadingItems && !isFinished && (
         <div className="mt-6 w-full max-w-sm mx-auto px-4">
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
             <div 
@@ -305,7 +366,7 @@ const SwipePage = () => {
             ></div>
           </div>
           <div className="text-center text-sm text-gray-500 mt-2">
-            {currentIndex} of {items.length}
+            {currentIndex + 1} of {items.length}
           </div>
           <div className="text-center text-xs text-gray-400 mt-2 flex items-center justify-center">
             <span className="mr-1">Pro tip: Use</span>
