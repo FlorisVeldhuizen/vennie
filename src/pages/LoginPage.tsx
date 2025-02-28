@@ -1,57 +1,73 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { useAuth } from '../contexts/AuthContext'
+import { toast } from 'react-hot-toast'
+import { signIn, getCurrentUser } from '../lib/supabase'
+import { useStore } from '../store/useStore'
 
 const LoginPage = () => {
+  const navigate = useNavigate()
+  const { setCurrentUser } = useStore()
+  
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  
-  const { login, error } = useAuth()
-  const navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState(false)
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!email || !password) return
+    if (!email || !password) {
+      toast.error('Please fill in all fields')
+      return
+    }
     
-    setIsSubmitting(true)
+    setIsLoading(true)
     
     try {
-      await login(email, password)
-      navigate('/swipe')
-    } catch (error) {
+      const { error } = await signIn(email, password)
+      
+      if (error) {
+        throw error
+      }
+      
+      // Get the current user
+      const user = await getCurrentUser()
+      
+      if (user) {
+        // Update the store with the current user
+        setCurrentUser({
+          id: user.id,
+          name: user.name || 'User'
+        })
+        
+        toast.success('Signed in successfully!')
+        navigate('/swipe')
+      }
+    } catch (error: unknown) {
       console.error('Login error:', error)
+      if (error instanceof Error) {
+        toast.error(error.message || 'Failed to sign in')
+      } else {
+        toast.error('An unknown error occurred')
+      }
     } finally {
-      setIsSubmitting(false)
+      setIsLoading(false)
     }
   }
   
   return (
-    <div className="container-app py-12">
-      <motion.div
+    <div className="container-app py-8">
+      <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-md mx-auto"
       >
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary-600">Welcome Back</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">
-            Sign in to continue to Vennie
-          </p>
-        </div>
+        <h1 className="text-3xl font-bold text-center mb-6">Sign In</h1>
         
         <div className="card p-6">
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4">
-              {error}
-            </div>
-          )}
-          
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium mb-1">
                 Email
               </label>
               <input
@@ -59,13 +75,14 @@ const LoginPage = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="input w-full"
+                placeholder="your@email.com"
                 required
               />
             </div>
             
             <div className="mb-6">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium mb-1">
                 Password
               </label>
               <input
@@ -73,7 +90,8 @@ const LoginPage = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="input w-full"
+                placeholder="••••••••"
                 required
               />
             </div>
@@ -81,17 +99,24 @@ const LoginPage = () => {
             <button
               type="submit"
               className="btn btn-primary w-full"
-              disabled={isSubmitting}
+              disabled={isLoading}
             >
-              {isSubmitting ? 'Signing in...' : 'Sign In'}
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <span className="animate-spin h-5 w-5 mr-2 border-t-2 border-b-2 border-white rounded-full"></span>
+                  Signing in...
+                </span>
+              ) : (
+                'Sign In'
+              )}
             </button>
           </form>
           
-          <div className="mt-4 text-center text-sm">
-            <p className="text-gray-600 dark:text-gray-400">
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               Don't have an account?{' '}
-              <Link to="/register" className="text-primary-600 hover:text-primary-700">
-                Sign up
+              <Link to="/register" className="text-primary-600 hover:text-primary-800">
+                Create one
               </Link>
             </p>
           </div>

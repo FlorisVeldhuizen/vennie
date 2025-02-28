@@ -16,13 +16,17 @@ const FurnitureCard = ({ item, isDragging = false, dragAmount = 0 }: FurnitureCa
   
   return (
     <div 
-      className={`card h-full overflow-hidden flex flex-col transition-all duration-200 ${
+      className={`card h-full overflow-hidden flex flex-col ${
         isDragging ? 'cursor-grabbing' : 'cursor-grab hover:shadow-xl hover:-translate-y-2'
       }`}
       style={{
         transform: `translateX(${dragAmount}px) rotate(${rotation}deg)`,
         boxShadow: isDragging ? '0 10px 25px rgba(0, 0, 0, 0.2)' : '',
-        transition: isDragging ? 'none' : 'all 0.3s ease'
+        transition: isDragging ? 'none' : 'transform 0.3s ease, box-shadow 0.3s ease',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        position: 'relative',
+        zIndex: 10
       }}
     >
       <div className="relative flex-grow">
@@ -36,7 +40,10 @@ const FurnitureCard = ({ item, isDragging = false, dragAmount = 0 }: FurnitureCa
         {/* Like indicator */}
         <div 
           className="absolute top-4 right-4 bg-green-500 text-white rounded-full p-3 text-xl font-bold transform rotate-12 pointer-events-none"
-          style={{ opacity: likeOpacity }}
+          style={{ 
+            opacity: likeOpacity,
+            transition: isDragging ? 'none' : 'opacity 0.2s ease'
+          }}
         >
           LIKE
         </div>
@@ -44,7 +51,10 @@ const FurnitureCard = ({ item, isDragging = false, dragAmount = 0 }: FurnitureCa
         {/* Dislike indicator */}
         <div 
           className="absolute top-4 left-4 bg-red-500 text-white rounded-full p-3 text-xl font-bold transform -rotate-12 pointer-events-none"
-          style={{ opacity: dislikeOpacity }}
+          style={{ 
+            opacity: dislikeOpacity,
+            transition: isDragging ? 'none' : 'opacity 0.2s ease'
+          }}
         >
           PASS
         </div>

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { FurnitureItem } from '../store/useStore'
 
 // These would typically come from environment variables
 // For demo purposes, we're using placeholder values
@@ -47,4 +48,85 @@ export const signOut = async () => {
 
 export const resetPassword = async (email: string) => {
   return supabase.auth.resetPasswordForEmail(email)
+}
+
+// Furniture items functions
+export const getFurnitureItems = async (): Promise<FurnitureItem[]> => {
+  const { data, error } = await supabase
+    .from('furniture_items')
+    .select('*')
+    .order('created_at', { ascending: false })
+  
+  if (error) {
+    console.error('Error fetching furniture items:', error)
+    return []
+  }
+  
+  return data.map(item => ({
+    id: item.id,
+    title: item.title,
+    description: item.description || '',
+    price: item.price || '',
+    imageUrl: item.image_url,
+    category: item.category || ''
+  }))
+}
+
+// User likes functions
+export const getUserLikes = async (userId: string): Promise<string[]> => {
+  const { data, error } = await supabase
+    .from('user_likes')
+    .select('item_id')
+    .eq('user_id', userId)
+  
+  if (error) {
+    console.error('Error fetching user likes:', error)
+    return []
+  }
+  
+  return data.map(like => like.item_id)
+}
+
+export const addUserLike = async (userId: string, itemId: string) => {
+  return supabase
+    .from('user_likes')
+    .insert({ user_id: userId, item_id: itemId })
+}
+
+export const removeUserLike = async (userId: string, itemId: string) => {
+  return supabase
+    .from('user_likes')
+    .delete()
+    .match({ user_id: userId, item_id: itemId })
+}
+
+// Get matches (items that both users like)
+export const getMatches = async (userId: string, partnerId: string): Promise<string[]> => {
+  // Get user likes
+  const { data: userLikes, error: userError } = await supabase
+    .from('user_likes')
+    .select('item_id')
+    .eq('user_id', userId)
+  
+  if (userError) {
+    console.error('Error fetching user likes:', userError)
+    return []
+  }
+  
+  // Get partner likes
+  const { data: partnerLikes, error: partnerError } = await supabase
+    .from('user_likes')
+    .select('item_id')
+    .eq('user_id', partnerId)
+  
+  if (partnerError) {
+    console.error('Error fetching partner likes:', partnerError)
+    return []
+  }
+  
+  // Find matches (items that both users like)
+  const userLikeIds = userLikes.map(like => like.item_id)
+  const partnerLikeIds = partnerLikes.map(like => like.item_id)
+  
+  return userLikeIds.filter(id => partnerLikeIds.includes(id))
 } 

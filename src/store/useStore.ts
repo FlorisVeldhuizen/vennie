@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { getFurnitureItems, getUserLikes, addUserLike as addLike, removeUserLike as removeLike } from '../lib/supabase'
 
 export interface FurnitureItem {
   id: string
@@ -21,10 +22,12 @@ interface StoreState {
   
   // Furniture items
   items: FurnitureItem[]
+  isLoadingItems: boolean
   
   // Preferences
   userLikes: string[] // IDs of items the current user likes
   partnerLikes: string[] // IDs of items the partner likes
+  isLoadingLikes: boolean
   
   // Matches (items both users like)
   matches: string[] // IDs of matched items
@@ -32,15 +35,16 @@ interface StoreState {
   // Actions
   setCurrentUser: (user: User | null) => void
   setPartner: (user: User | null) => void
-  setItems: (items: FurnitureItem[]) => void
-  addUserLike: (itemId: string) => void
+  fetchItems: () => Promise<void>
+  fetchUserLikes: (userId: string) => Promise<void>
+  addUserLike: (itemId: string) => Promise<void>
+  removeUserLike: (itemId: string) => Promise<void>
   addPartnerLike: (itemId: string) => void
-  removeUserLike: (itemId: string) => void
   removePartnerLike: (itemId: string) => void
   resetLikes: () => void
 }
 
-// Mock data for furniture items
+// Mock data for furniture items (fallback if API fails)
 const MOCK_FURNITURE: FurnitureItem[] = [
   {
     id: '1',
@@ -84,31 +88,91 @@ const MOCK_FURNITURE: FurnitureItem[] = [
   }
 ]
 
-export const useStore = create<StoreState>((set) => ({
+export const useStore = create<StoreState>((set, get) => ({
   // Initial state
-  currentUser: { id: 'user1', name: 'User 1' },
-  partner: { id: 'user2', name: 'User 2' },
+  currentUser: null,
+  partner: null,
   items: MOCK_FURNITURE,
+  isLoadingItems: false,
   userLikes: [],
   partnerLikes: [],
+  isLoadingLikes: false,
   matches: [],
   
   // Actions
   setCurrentUser: (user) => set({ currentUser: user }),
-  setPartner: (user) => set({ partner: user }),
-  setItems: (items) => set({ items }),
   
-  addUserLike: (itemId) => set((state) => {
-    const newUserLikes = [...state.userLikes, itemId]
-    const newMatches = state.partnerLikes.includes(itemId) 
-      ? [...state.matches, itemId]
-      : state.matches
-    
-    return { 
-      userLikes: newUserLikes,
-      matches: newMatches
+  setPartner: (user) => set({ partner: user }),
+  
+  fetchItems: async () => {
+    set({ isLoadingItems: true })
+    try {
+      const items = await getFurnitureItems()
+      if (items.length > 0) {
+        set({ items })
+      }
+    } catch (error) {
+      console.error('Error fetching furniture items:', error)
+    } finally {
+      set({ isLoadingItems: false })
     }
-  }),
+  },
+  
+  fetchUserLikes: async (userId) => {
+    set({ isLoadingLikes: true })
+    try {
+      const likes = await getUserLikes(userId)
+      set({ userLikes: likes })
+      
+      // Update matches
+      const { partnerLikes } = get()
+      const matches = likes.filter(id => partnerLikes.includes(id))
+      set({ matches })
+    } catch (error) {
+      console.error('Error fetching user likes:', error)
+    } finally {
+      set({ isLoadingLikes: false })
+    }
+  },
+  
+  addUserLike: async (itemId) => {
+    const { currentUser, partnerLikes } = get()
+    if (!currentUser) return
+    
+    try {
+      await addLike(currentUser.id, itemId)
+      
+      // Update local state
+      const newUserLikes = [...get().userLikes, itemId]
+      const newMatches = partnerLikes.includes(itemId) 
+        ? [...get().matches, itemId]
+        : get().matches
+      
+      set({ 
+        userLikes: newUserLikes,
+        matches: newMatches
+      })
+    } catch (error) {
+      console.error('Error adding user like:', error)
+    }
+  },
+  
+  removeUserLike: async (itemId) => {
+    const { currentUser } = get()
+    if (!currentUser) return
+    
+    try {
+      await removeLike(currentUser.id, itemId)
+      
+      // Update local state
+      set({
+        userLikes: get().userLikes.filter(id => id !== itemId),
+        matches: get().matches.filter(id => id !== itemId)
+      })
+    } catch (error) {
+      console.error('Error removing user like:', error)
+    }
+  },
   
   addPartnerLike: (itemId) => set((state) => {
     const newPartnerLikes = [...state.partnerLikes, itemId]
@@ -121,11 +185,6 @@ export const useStore = create<StoreState>((set) => ({
       matches: newMatches
     }
   }),
-  
-  removeUserLike: (itemId) => set((state) => ({
-    userLikes: state.userLikes.filter(id => id !== itemId),
-    matches: state.matches.filter(id => id !== itemId)
-  })),
   
   removePartnerLike: (itemId) => set((state) => ({
     partnerLikes: state.partnerLikes.filter(id => id !== itemId),
