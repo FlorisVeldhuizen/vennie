@@ -10,6 +10,8 @@ interface FurnitureCardProps {
   onRest?: () => void
   isExiting?: boolean
   exitDirection?: 'left' | 'right'
+  swipeThreshold: number
+  isNew?: boolean
 }
 
 const FurnitureCard = ({ 
@@ -20,23 +22,35 @@ const FurnitureCard = ({
   dragVelocity = 0,
   onRest,
   isExiting = false,
-  exitDirection
+  exitDirection,
+  swipeThreshold,
+  isNew = false
 }: FurnitureCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null)
   const [isResting, setIsResting] = useState(true)
   const [wobbleDirection, setWobbleDirection] = useState<'left' | 'right' | null>(null)
+  const [hasEnteredView, setHasEnteredView] = useState(!isNew)
   
   // Calculate rotation based on drag amount and velocity for more dynamic feel
   const rotationX = Math.min(Math.max(dragAmountY * 0.05, -10), 10)
   const rotationZ = Math.min(Math.max((dragAmount * 0.05) + (dragVelocity * 0.1), -20), 20)
   
-  // Calculate opacity for like/dislike indicators
-  const likeOpacity = dragAmount > 0 ? Math.min(dragAmount / 100, 1) : 0
-  const dislikeOpacity = dragAmount < 0 ? Math.min(Math.abs(dragAmount) / 100, 1) : 0
+  // Calculate opacity for like/dislike indicators based on threshold
+  const thresholdRatio = Math.min(Math.abs(dragAmount) / swipeThreshold, 1)
   
   // Dynamic shadow based on height and drag
   const shadowSize = 20 + Math.abs(dragAmountY) * 0.2 + Math.abs(dragAmount) * 0.05
   const shadowBlur = 30 + Math.abs(dragAmount) * 0.1 + Math.abs(dragVelocity) * 0.2
+  
+  // Handle entrance animation for new cards
+  useEffect(() => {
+    if (isNew && !hasEnteredView) {
+      const timer = setTimeout(() => {
+        setHasEnteredView(true);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isNew, hasEnteredView]);
   
   // Determine wobble direction based on where the card was last dragged
   useEffect(() => {
@@ -82,6 +96,7 @@ const FurnitureCard = ({
   const getTransitionTiming = () => {
     if (isDragging) return 'none';
     if (isExiting) return 'transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1)';
+    if (!hasEnteredView) return 'none';
     
     // Faster snap-back when released with higher velocity
     const velocityFactor = Math.min(Math.abs(dragVelocity) * 0.001, 0.3);
@@ -104,6 +119,13 @@ const FurnitureCard = ({
       `;
     }
     
+    if (!hasEnteredView) {
+      return `
+        translateY(-100vh)
+        scale(0.9)
+      `;
+    }
+    
     return `
       translateX(${dragAmount}px) 
       translateY(${dragAmountY * 0.5}px) 
@@ -111,6 +133,14 @@ const FurnitureCard = ({
       rotateZ(${rotationZ}deg)
     `;
   };
+  
+  // Determine if we should show the LIKE/PASS indicator prominently
+  const isPastThreshold = Math.abs(dragAmount) >= swipeThreshold * 0.8;
+  const showIndicator = isPastThreshold || (isExiting && exitDirection);
+  const indicatorType = (dragAmount > 0 || exitDirection === 'right') ? 'LIKE' : 'PASS';
+  const indicatorColor = indicatorType === 'LIKE' 
+    ? 'from-green-400 to-green-600' 
+    : 'from-red-400 to-red-600';
   
   return (
     <div 
@@ -141,26 +171,16 @@ const FurnitureCard = ({
           draggable="false"
         />
         
-        {/* Like indicator */}
+        {/* Main indicator */}
         <div 
-          className="absolute top-6 right-6 bg-gradient-to-br from-green-400 to-green-600 text-white rounded-full py-3 px-6 text-xl font-bold transform rotate-12 pointer-events-none shadow-lg"
+          className={`absolute top-1/2 right-1/2 transform translate-x-1/2 -translate-y-1/2 bg-gradient-to-br ${indicatorColor} text-white rounded-full py-4 px-8 text-3xl font-bold pointer-events-none shadow-lg transition-all duration-300`}
           style={{ 
-            opacity: likeOpacity,
-            transform: `rotate(${12 + (dragAmount * 0.02)}deg) scale(${0.8 + likeOpacity * 0.4})`,
+            zIndex: 20,
+            opacity: showIndicator ? 1 : thresholdRatio * 0.7,
+            transform: `translate(50%, -50%) scale(${showIndicator ? 1 : 0.8 + thresholdRatio * 0.2})`,
           }}
         >
-          LIKE
-        </div>
-        
-        {/* Dislike indicator */}
-        <div 
-          className="absolute top-6 left-6 bg-gradient-to-br from-red-400 to-red-600 text-white rounded-full py-3 px-6 text-xl font-bold transform -rotate-12 pointer-events-none shadow-lg"
-          style={{ 
-            opacity: dislikeOpacity,
-            transform: `rotate(${-12 + (dragAmount * 0.02)}deg) scale(${0.8 + dislikeOpacity * 0.4})`,
-          }}
-        >
-          PASS
+          {indicatorType}
         </div>
         
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-6 backdrop-blur-sm">
