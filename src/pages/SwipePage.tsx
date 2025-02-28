@@ -4,9 +4,8 @@ import FurnitureCard from '../components/FurnitureCard'
 import { useStore } from '../store/useStore'
 
 // Constants for swipe behavior
-const SWIPE_THRESHOLD = 400
-const SWIPE_OUT_DISTANCE = 1000
-const ANIMATION_DURATION = 500 // Increased for more bouncy animations
+const SWIPE_THRESHOLD = 200
+const ANIMATION_DURATION = 800 // Longer duration for smoother exit animation
 
 const SwipePage = () => {
   const navigate = useNavigate()
@@ -16,6 +15,8 @@ const SwipePage = () => {
   const [dragAmountY, setDragAmountY] = useState(0)
   const [dragVelocity, setDragVelocity] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [isExiting, setIsExiting] = useState(false)
+  const [exitDirection, setExitDirection] = useState<'left' | 'right' | null>(null)
   const startX = useRef(0)
   const startY = useRef(0)
   const lastX = useRef(0)
@@ -74,26 +75,15 @@ const SwipePage = () => {
     if (isAnimating) return // Prevent multiple swipes while animating
     
     setIsAnimating(true)
+    setIsExiting(true)
+    setExitDirection(direction)
+    
     const item = items[currentIndex]
     
     if (direction === 'right' && currentUser) {
       // Add to likes if swiped right
       addUserLike(item.id)
     }
-    
-    // Set final position for swipe out animation
-    const velocity = calculateAverageVelocity();
-    const velocityFactor = Math.min(Math.abs(velocity) * 0.5, 200);
-    const swipeDistance = direction === 'right' 
-      ? SWIPE_OUT_DISTANCE + velocityFactor 
-      : -SWIPE_OUT_DISTANCE - velocityFactor;
-    
-    setDragAmount(swipeDistance);
-    setDragVelocity(direction === 'right' ? Math.abs(velocity) : -Math.abs(velocity));
-    
-    // Add vertical movement based on velocity and random factor
-    const verticalOffset = (Math.random() > 0.5 ? 50 : -50) + (velocity * 0.2);
-    setDragAmountY(verticalOffset);
     
     // Move to the next item after animation completes
     setTimeout(() => {
@@ -102,6 +92,8 @@ const SwipePage = () => {
       setDragAmountY(0) // Reset vertical drag
       setDragVelocity(0) // Reset velocity
       setIsAnimating(false)
+      setIsExiting(false)
+      setExitDirection(null)
       velocityTracker.current = []; // Clear velocity tracker
     }, ANIMATION_DURATION)
   }, [isAnimating, items, currentIndex, currentUser, addUserLike])
@@ -333,6 +325,8 @@ const SwipePage = () => {
               dragAmountY={dragAmountY}
               dragVelocity={dragVelocity}
               onRest={handleCardRest}
+              isExiting={isExiting}
+              exitDirection={exitDirection || undefined}
             />
           </div>
         )}

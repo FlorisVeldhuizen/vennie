@@ -8,6 +8,8 @@ interface FurnitureCardProps {
   dragAmountY?: number
   dragVelocity?: number
   onRest?: () => void
+  isExiting?: boolean
+  exitDirection?: 'left' | 'right'
 }
 
 const FurnitureCard = ({ 
@@ -16,7 +18,9 @@ const FurnitureCard = ({
   dragAmount = 0,
   dragAmountY = 0,
   dragVelocity = 0,
-  onRest
+  onRest,
+  isExiting = false,
+  exitDirection
 }: FurnitureCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null)
   const [isResting, setIsResting] = useState(true)
@@ -25,12 +29,6 @@ const FurnitureCard = ({
   // Calculate rotation based on drag amount and velocity for more dynamic feel
   const rotationX = Math.min(Math.max(dragAmountY * 0.05, -10), 10)
   const rotationZ = Math.min(Math.max((dragAmount * 0.05) + (dragVelocity * 0.1), -20), 20)
-  
-  // Calculate scale based on drag amount for a "stretchy" effect
-  // More stretch when dragging faster
-  const velocityFactor = Math.min(Math.abs(dragVelocity) * 0.001, 0.1)
-  const stretchX = 1 + Math.abs(dragAmount) * 0.0005 + velocityFactor
-  const stretchY = 1 - Math.abs(dragAmount) * 0.0003 - (velocityFactor * 0.5)
   
   // Calculate opacity for like/dislike indicators
   const likeOpacity = dragAmount > 0 ? Math.min(dragAmount / 100, 1) : 0
@@ -67,7 +65,7 @@ const FurnitureCard = ({
   
   // Get the appropriate wobble animation class
   const getWobbleClass = () => {
-    if (isDragging || !isResting) return '';
+    if (isDragging || !isResting || isExiting) return '';
     
     if (wobbleDirection === 'right') {
       return 'wobble-right-animation';
@@ -83,6 +81,7 @@ const FurnitureCard = ({
   // Calculate transition timing based on velocity
   const getTransitionTiming = () => {
     if (isDragging) return 'none';
+    if (isExiting) return 'transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1)';
     
     // Faster snap-back when released with higher velocity
     const velocityFactor = Math.min(Math.abs(dragVelocity) * 0.001, 0.3);
@@ -92,6 +91,27 @@ const FurnitureCard = ({
     return `transform ${duration}s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease`;
   };
   
+  // Get transform style based on state
+  const getTransform = () => {
+    if (isExiting) {
+      const direction = exitDirection === 'left' ? -1 : 1;
+      const distance = window.innerWidth * 1.5;
+      const rotation = direction * 30;
+      return `
+        translateX(${direction * distance}px)
+        translateY(${dragAmountY * 2}px)
+        rotate(${rotation}deg)
+      `;
+    }
+    
+    return `
+      translateX(${dragAmount}px) 
+      translateY(${dragAmountY * 0.5}px) 
+      rotate3d(1, 0, 0, ${rotationX}deg) 
+      rotateZ(${rotationZ}deg)
+    `;
+  };
+  
   return (
     <div 
       ref={cardRef}
@@ -99,13 +119,7 @@ const FurnitureCard = ({
         isDragging ? 'cursor-grabbing' : 'cursor-grab hover:shadow-2xl hover:-translate-y-3'
       } ${getWobbleClass()}`}
       style={{
-        transform: `
-          translateX(${dragAmount}px) 
-          translateY(${dragAmountY * 0.5}px) 
-          rotate3d(1, 0, 0, ${rotationX}deg) 
-          rotateZ(${rotationZ}deg)
-          scale(${stretchX}, ${stretchY})
-        `,
+        transform: getTransform(),
         boxShadow: isDragging 
           ? `0 ${shadowSize}px ${shadowBlur}px rgba(0, 0, 0, 0.2)` 
           : '0 10px 30px rgba(0, 0, 0, 0.1)',
@@ -123,11 +137,7 @@ const FurnitureCard = ({
         <img 
           src={item.imageUrl} 
           alt={item.title} 
-          className="w-full h-full object-cover transition-transform duration-300"
-          style={{
-            transform: `scale(${isDragging ? 1.05 : 1})`,
-            transition: isDragging ? 'transform 0.1s ease-out' : 'transform 0.3s ease-out',
-          }}
+          className="w-full h-full object-cover"
           draggable="false"
         />
         
@@ -137,7 +147,6 @@ const FurnitureCard = ({
           style={{ 
             opacity: likeOpacity,
             transform: `rotate(${12 + (dragAmount * 0.02)}deg) scale(${0.8 + likeOpacity * 0.4})`,
-            transition: isDragging ? 'transform 0.1s ease-out' : 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
           }}
         >
           LIKE
@@ -149,31 +158,18 @@ const FurnitureCard = ({
           style={{ 
             opacity: dislikeOpacity,
             transform: `rotate(${-12 + (dragAmount * 0.02)}deg) scale(${0.8 + dislikeOpacity * 0.4})`,
-            transition: isDragging ? 'transform 0.1s ease-out' : 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
           }}
         >
           PASS
         </div>
         
-        <div 
-          className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-6 backdrop-blur-sm"
-          style={{
-            transform: isDragging ? `translateY(${dragAmountY * 0.1}px)` : 'translateY(0)',
-            transition: isDragging ? 'none' : 'transform 0.3s ease-out'
-          }}
-        >
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-6 backdrop-blur-sm">
           <h3 className="text-2xl font-bold text-white">{item.title}</h3>
           <p className="text-xl font-semibold text-white/90">{item.price}</p>
         </div>
       </div>
       
-      <div 
-        className="p-5 bg-white dark:bg-gray-800"
-        style={{
-          transform: isDragging ? `translateY(${dragAmountY * -0.05}px)` : 'translateY(0)',
-          transition: isDragging ? 'none' : 'transform 0.3s ease-out'
-        }}
-      >
+      <div className="p-5 bg-white dark:bg-gray-800">
         <p className="text-gray-700 dark:text-gray-300 line-clamp-2">{item.description}</p>
         <div className="mt-3">
           <span className="inline-block bg-gradient-to-r from-primary-100 to-primary-200 dark:from-primary-800 dark:to-primary-700 rounded-full px-4 py-1.5 text-sm font-semibold text-primary-700 dark:text-primary-200">
