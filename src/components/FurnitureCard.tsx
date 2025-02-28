@@ -8,7 +8,7 @@ interface FurnitureCardProps {
 
 const FurnitureCard = ({ item, isDragging = false, dragAmount = 0 }: FurnitureCardProps) => {
   // Calculate rotation based on drag amount (between -15 and 15 degrees)
-  const rotation = Math.min(Math.max(dragAmount * 0.1, -15), 15)
+  const rotation = Math.min(Math.max(dragAmount * 0.05, -15), 15)
   
   // Calculate opacity for like/dislike indicators
   const likeOpacity = dragAmount > 0 ? Math.min(dragAmount / 100, 1) : 0
@@ -20,8 +20,9 @@ const FurnitureCard = ({ item, isDragging = false, dragAmount = 0 }: FurnitureCa
         isDragging ? 'cursor-grabbing' : 'cursor-grab hover:shadow-xl hover:-translate-y-2'
       }`}
       style={{
-        transform: isDragging ? `rotate(${rotation}deg)` : '',
-        boxShadow: isDragging ? '0 10px 25px rgba(0, 0, 0, 0.2)' : ''
+        transform: `translateX(${dragAmount}px) rotate(${rotation}deg)`,
+        boxShadow: isDragging ? '0 10px 25px rgba(0, 0, 0, 0.2)' : '',
+        transition: isDragging ? 'none' : 'all 0.3s ease'
       }}
     >
       <div className="relative flex-grow">
