@@ -96,6 +96,28 @@
   }
 }
 
+/* Card entrance animation from top */
+@keyframes slide-from-top {
+  0% {
+    transform: translateY(-30vh) scale(0.95) rotate3d(1, 0, 0, 10deg);
+    opacity: 0.5;
+  }
+  60% {
+    transform: translateY(15px) scale(1.02) rotate3d(1, 0, 0, -2deg);
+  }
+  80% {
+    transform: translateY(-5px) scale(0.99) rotate3d(1, 0, 0, 1deg);
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate3d(1, 0, 0, 0deg);
+    opacity: 1;
+  }
+}
+
+.slide-in-animation {
+  animation: slide-from-top 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 /* Directional wobble animations */
 @keyframes wobble-right {
   0% {

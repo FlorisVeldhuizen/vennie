@@ -11,7 +11,6 @@ interface FurnitureCardProps {
   isExiting?: boolean
   exitDirection?: 'left' | 'right'
   swipeThreshold: number
-  isNew?: boolean
 }
 
 const FurnitureCard = ({ 
@@ -23,13 +22,11 @@ const FurnitureCard = ({
   onRest,
   isExiting = false,
   exitDirection,
-  swipeThreshold,
-  isNew = false
+  swipeThreshold
 }: FurnitureCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null)
   const [isResting, setIsResting] = useState(true)
   const [wobbleDirection, setWobbleDirection] = useState<'left' | 'right' | null>(null)
-  const [hasEnteredView, setHasEnteredView] = useState(!isNew)
   
   // Calculate rotation based on drag amount and velocity for more dynamic feel
   const rotationX = Math.min(Math.max(dragAmountY * 0.05, -10), 10)
@@ -41,16 +38,6 @@ const FurnitureCard = ({
   // Dynamic shadow based on height and drag
   const shadowSize = 20 + Math.abs(dragAmountY) * 0.2 + Math.abs(dragAmount) * 0.05
   const shadowBlur = 30 + Math.abs(dragAmount) * 0.1 + Math.abs(dragVelocity) * 0.2
-  
-  // Handle entrance animation for new cards
-  useEffect(() => {
-    if (isNew && !hasEnteredView) {
-      const timer = setTimeout(() => {
-        setHasEnteredView(true);
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [isNew, hasEnteredView]);
   
   // Determine wobble direction based on where the card was last dragged
   useEffect(() => {
@@ -96,7 +83,6 @@ const FurnitureCard = ({
   const getTransitionTiming = () => {
     if (isDragging) return 'none';
     if (isExiting) return 'transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1)';
-    if (!hasEnteredView) return 'none';
     
     // Faster snap-back when released with higher velocity
     const velocityFactor = Math.min(Math.abs(dragVelocity) * 0.001, 0.3);
@@ -116,13 +102,6 @@ const FurnitureCard = ({
         translateX(${direction * distance}px)
         translateY(${dragAmountY * 2}px)
         rotate(${rotation}deg)
-      `;
-    }
-    
-    if (!hasEnteredView) {
-      return `
-        translateY(-100vh)
-        scale(0.9)
       `;
     }
     

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import FurnitureCard from '../components/FurnitureCard'
 import { useStore } from '../store/useStore'
@@ -16,7 +16,6 @@ const SwipePage = () => {
   const [isAnimating, setIsAnimating] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
   const [exitDirection, setExitDirection] = useState<'left' | 'right' | null>(null)
-  const [isNewCard, setIsNewCard] = useState(true)
   const [activeButton, setActiveButton] = useState<'left' | 'right' | null>(null)
   
   // Refs for drag tracking
@@ -32,14 +31,14 @@ const SwipePage = () => {
   const isFinished = currentIndex >= items.length
   
   // Reset card position
-  const resetCard = () => {
+  const resetCard = useCallback(() => {
     setDragAmount(0)
     setDragAmountY(0)
     setActiveButton(null)
-  }
+  }, [])
   
   // Handle swipe action
-  const handleSwipe = (direction: 'left' | 'right') => {
+  const handleSwipe = useCallback((direction: 'left' | 'right') => {
     if (isAnimating || isFinished) return
     
     setIsAnimating(true)
@@ -58,12 +57,11 @@ const SwipePage = () => {
       setIsAnimating(false)
       setIsExiting(false)
       setExitDirection(null)
-      setIsNewCard(true)
     }, ANIMATION_DURATION)
-  }
+  }, [isAnimating, isFinished, currentUser, currentItem, addUserLike, resetCard])
   
   // Direct swipe for buttons and keyboard
-  const directSwipe = (direction: 'left' | 'right') => {
+  const directSwipe = useCallback((direction: 'left' | 'right') => {
     if (isAnimating || isFinished) return
     
     // Set active button for visual feedback
@@ -71,7 +69,7 @@ const SwipePage = () => {
     
     // Animation variables
     const targetX = direction === 'right' ? window.innerWidth : -window.innerWidth
-    const animationDuration = 300 // ms
+    const animationDuration = 600 // ms - longer for smoother animation
     const startTime = performance.now()
     
     // Animation function using requestAnimationFrame
@@ -79,11 +77,16 @@ const SwipePage = () => {
       const elapsedTime = currentTime - startTime
       const progress = Math.min(elapsedTime / animationDuration, 1)
       
-      // Easing function for smooth animation (ease-out cubic)
-      const eased = 1 - Math.pow(1 - progress, 3)
+      // Smoother easing function - cubic bezier approximation
+      const eased = progress < 0.5 
+        ? 4 * progress * progress * progress 
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2
       
-      // Set the drag amount based on progress
-      setDragAmount(targetX * 0.5 * eased)
+      // Set the drag amount based on progress with gentler movement
+      setDragAmount(targetX * 0.4 * eased)
+      
+      // Add some subtle vertical movement
+      setDragAmountY(Math.sin(progress * Math.PI) * 15)
       
       if (progress < 1) {
         // Continue animation
@@ -96,16 +99,29 @@ const SwipePage = () => {
     
     // Start animation
     requestAnimationFrame(animate)
-  }
+  }, [isAnimating, isFinished, handleSwipe])
   
   // Handle keyboard navigation
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent | React.KeyboardEvent) => {
+    if (isAnimating || isFinished) return
+    
     if (e.key === 'ArrowLeft') {
       directSwipe('left')
     } else if (e.key === 'ArrowRight') {
       directSwipe('right')
     }
-  }
+  }, [directSwipe, isAnimating, isFinished])
+  
+  // Set up global keyboard event listener
+  useEffect(() => {
+    // Add global keyboard listener
+    document.addEventListener('keydown', handleKeyDown)
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [handleKeyDown]) // Include handleKeyDown in dependencies
   
   // Mouse event handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -212,8 +228,7 @@ const SwipePage = () => {
   return (
     <div 
       className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden" 
-      tabIndex={0} 
-      onKeyDown={handleKeyDown}
+      tabIndex={0}
     >
       <div className="relative h-[550px] w-full max-w-sm mx-auto">
         {isFinished ? (
@@ -243,11 +258,10 @@ const SwipePage = () => {
               isDragging={isDragging}
               dragAmount={dragAmount}
               dragAmountY={dragAmountY}
-              onRest={() => setIsNewCard(false)}
+              onRest={() => {}}
               isExiting={isExiting}
               exitDirection={exitDirection || undefined}
               swipeThreshold={SWIPE_THRESHOLD}
-              isNew={isNewCard}
             />
           </div>
         )}
@@ -292,6 +306,13 @@ const SwipePage = () => {
           </div>
           <div className="text-center text-sm text-gray-500 mt-2">
             {currentIndex} of {items.length}
+          </div>
+          <div className="text-center text-xs text-gray-400 mt-2 flex items-center justify-center">
+            <span className="mr-1">Pro tip: Use</span>
+            <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 mx-1">←</kbd>
+            <span className="mx-1">and</span>
+            <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 mx-1">→</kbd>
+            <span className="ml-1">arrow keys to swipe</span>
           </div>
         </div>
       )}
