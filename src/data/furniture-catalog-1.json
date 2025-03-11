@@ -1,0 +1,74 @@
+{
+  "items": [
+    {
+      "id": "ikea-3",
+      "title": "SALNÖ",
+      "description": "SALNÖ Armchair",
+      "price": {
+        "amount": 78.2,
+        "currency": "EUR"
+      },
+      "category": "Dining",
+      "imageUrl": "https://www.ikea.com/us/en/images/products/salnoe-armchair-rattan__1224550_pe915021_s5.jpg?f=xxs",
+      "url": "https://www.ikea.com/us/en/p/salnoe-armchair-rattan-50551202/",
+      "details": {}
+    },
+    {
+      "id": "ikea-4",
+      "title": "KARLPETTER",
+      "description": "KARLPETTER Chair",
+      "price": {
+        "amount": 69,
+        "currency": "EUR"
+      },
+      "category": "Dining",
+      "imageUrl": "https://www.ikea.com/us/en/images/products/karlpetter-chair-gunnared-medium-gray-sefast-black__1106907_pe868870_s5.jpg?f=xxs",
+      "url": "https://www.ikea.com/us/en/p/karlpetter-chair-gunnared-medium-gray-sefast-black-s59481417/",
+      "details": {}
+    },
+    {
+      "id": "ikea-6",
+      "title": "EKEDALEN",
+      "description": "EKEDALEN Chair",
+      "price": {
+        "amount": 55.2,
+        "currency": "EUR"
+      },
+      "category": "Dining",
+      "imageUrl": "https://www.ikea.com/us/en/images/products/ekedalen-chair-white-orrsta-light-gray__0728310_pe736178_s5.jpg?f=xxs",
+      "url": "https://www.ikea.com/us/en/p/ekedalen-chair-white-orrsta-light-gray-10341112/",
+      "details": {}
+    },
+    {
+      "id": "ikea-7",
+      "title": "GRÖNSTA",
+      "description": "GRÖNSTA Chair",
+      "price": {
+        "amount": 55.2,
+        "currency": "EUR"
+      },
+      "category": "Dining",
+      "imageUrl": "https://www.ikea.com/us/en/images/products/groensta-chair-indoor-outdoor-white__1243689_pe920720_s5.jpg?f=xxs",
+      "url": "https://www.ikea.com/us/en/p/groensta-chair-indoor-outdoor-white-70519763/",
+      "details": {}
+    },
+    {
+      "id": "ikea-9",
+      "title": "SKANSNÄS",
+      "description": "SKANSNÄS Chair",
+      "price": {
+        "amount": 115,
+        "currency": "EUR"
+      },
+      "category": "Dining",
+      "imageUrl": "https://www.ikea.com/us/en/images/products/skansnaes-chair-brown-beech__1319860_pe941001_s5.jpg?f=xxs",
+      "url": "https://www.ikea.com/us/en/p/skansnaes-chair-brown-beech-70563242/",
+      "details": {}
+    }
+  ],
+  "meta": {
+    "lastUpdate": "2025-03-11T22:10:31.258Z",
+    "totalItems": 33,
+    "isComplete": false
+  }
+}

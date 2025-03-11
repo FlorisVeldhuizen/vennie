@@ -1,25 +1,59 @@
 import { createClient } from '@supabase/supabase-js'
 import { FurnitureItem } from '../store/useStore'
 
+// Database types
+interface DbFurnitureItem {
+  id: string
+  title: string
+  description: string | null
+  price: string | null
+  currency: string | null
+  image_url: string
+  category: string | null
+  url: string | null
+  materials: string | null
+  dimensions: string | null
+  color: string | null
+  created_at: string
+}
+
+interface DbUserLike {
+  user_id: string
+  item_id: string
+  created_at: string
+}
+
 // These would typically come from environment variables
 // For demo purposes, we're using placeholder values
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-supabase-url.supabase.co'
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key'
 
-// Create Supabase client with persistence enabled
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    storageKey: 'vennie-auth-storage-key',
-    autoRefreshToken: true,
+// Singleton instance
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+// Create or get Supabase client with persistence enabled
+export const getSupabase = () => {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        storageKey: 'vennie-auth-storage-key',
+        autoRefreshToken: true,
+      }
+    })
   }
-})
+  return supabaseInstance
+}
+
+// Export the singleton instance
+export const supabase = getSupabase()
 
 // Types for authentication
 export type AuthUser = {
   id: string
   email: string
   name?: string
+  likes?: string[]
 }
 
 // Helper functions for authentication
@@ -89,13 +123,23 @@ export const getFurnitureItems = async (): Promise<FurnitureItem[]> => {
     return []
   }
   
-  return data.map(item => ({
+  const rawData = data as unknown as DbFurnitureItem[]
+  return rawData.map(item => ({
     id: item.id,
     title: item.title,
     description: item.description || '',
-    price: item.price || '',
+    price: {
+      amount: parseFloat(item.price || '0'),
+      currency: item.currency || 'EUR'
+    },
     imageUrl: item.image_url,
-    category: item.category || ''
+    category: item.category || '',
+    url: item.url || '',
+    details: {
+      materials: item.materials || undefined,
+      dimensions: item.dimensions || undefined,
+      color: item.color || undefined
+    }
   }))
 }
 
@@ -111,7 +155,7 @@ export const getUserLikes = async (userId: string): Promise<string[]> => {
     return []
   }
   
-  return data.map(like => like.item_id)
+  return (data as DbUserLike[]).map(like => like.item_id)
 }
 
 export const addUserLike = async (userId: string, itemId: string) => {
@@ -152,8 +196,8 @@ export const getMatches = async (userId: string, partnerId: string): Promise<str
   }
   
   // Find matches (items that both users like)
-  const userLikeIds = userLikes.map(like => like.item_id)
-  const partnerLikeIds = partnerLikes.map(like => like.item_id)
+  const userLikeIds = (userLikes as Pick<DbUserLike, 'item_id'>[]).map(like => like.item_id)
+  const partnerLikeIds = (partnerLikes as Pick<DbUserLike, 'item_id'>[]).map(like => like.item_id)
   
   return userLikeIds.filter(id => partnerLikeIds.includes(id))
 } 

@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import FurnitureCard from '../components/FurnitureCard'
+import CurrencySelector from '../components/CurrencySelector'
 import { useStore } from '../store/useStore'
+import { type CurrencyCode } from '../utils/loadFurniture'
 
 // Constants for swipe behavior
 const SWIPE_THRESHOLD = 200
@@ -19,6 +21,7 @@ const SwipePage = () => {
   const [activeButton, setActiveButton] = useState<'left' | 'right' | null>(null)
   const [isHovering, setIsHovering] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
+  const [currency, setCurrency] = useState<CurrencyCode>('EUR')
   
   // Refs for drag tracking
   const startX = useRef(0)
@@ -37,13 +40,13 @@ const SwipePage = () => {
   useEffect(() => {
     const initializeData = async () => {
       if (items.length === 0 && !isLoadingItems) {
-        await fetchItems()
+        await fetchItems(currency)
       }
       setIsInitialized(true)
     }
     
     initializeData()
-  }, [items.length, isLoadingItems, fetchItems])
+  }, [items.length, isLoadingItems, fetchItems, currency])
   
   const currentItem = items[currentIndex]
   const nextItem = items[currentIndex + 1]
@@ -289,6 +292,11 @@ const SwipePage = () => {
       className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden" 
       tabIndex={0}
     >
+      {/* Currency selector */}
+      <div className="absolute top-4 right-4 z-50">
+        <CurrencySelector value={currency} onChange={setCurrency} />
+      </div>
+
       <div className="relative h-[550px] w-full max-w-sm mx-auto">
         {isLoadingItems || !isInitialized ? (
           <div className="card p-10 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-xl">
@@ -331,6 +339,7 @@ const SwipePage = () => {
                   swipeThreshold={SWIPE_THRESHOLD}
                   isHovering={false}
                   isNextCard={true}
+                  currency={currency}
                 />
               </div>
             )}
@@ -356,6 +365,7 @@ const SwipePage = () => {
                 exitDirection={exitDirection || undefined}
                 swipeThreshold={SWIPE_THRESHOLD}
                 isHovering={isHovering}
+                currency={currency}
               />
             </div>
           </div>
