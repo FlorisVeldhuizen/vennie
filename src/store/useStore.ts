@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { getFurnitureItems, getUserLikes, addUserLike as addLike, removeUserLike as removeLike } from '../lib/supabase'
+import { loadFurniture } from '../utils/loadFurniture'
+import furnitureData from '../data/furniture.json'
 
 export interface FurnitureItem {
   id: string
@@ -92,7 +94,7 @@ export const useStore = create<StoreState>((set, get) => ({
   // Initial state
   currentUser: null,
   partner: null,
-  items: MOCK_FURNITURE,
+  items: furnitureData,
   isLoadingItems: false,
   userLikes: [],
   partnerLikes: [],
@@ -107,12 +109,10 @@ export const useStore = create<StoreState>((set, get) => ({
   fetchItems: async () => {
     set({ isLoadingItems: true })
     try {
-      const items = await getFurnitureItems()
-      if (items.length > 0) {
-        set({ items })
-      }
+      const items = await loadFurniture()
+      set({ items })
     } catch (error) {
-      console.error('Error fetching furniture items:', error)
+      console.error('Failed to fetch items:', error)
     } finally {
       set({ isLoadingItems: false })
     }

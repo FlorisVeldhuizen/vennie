@@ -1,0 +1,170 @@
+[
+  {
+    "id": "ikea-0",
+    "title": "UPPLAND",
+    "description": "UPPLAND",
+    "price": "$849.00",
+    "category": "Living Room",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/uppland-sofa-blekinge-white__0818565_pe774487_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-1",
+    "title": "KIVIK",
+    "description": "KIVIK",
+    "price": "$749.00",
+    "category": "Living Room",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/kivik-sofa-tibbleby-beige-gray__1056144_pe848277_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-2",
+    "title": "FINNALA",
+    "description": "FINNALA",
+    "price": "$1599.00",
+    "category": "Living Room",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/finnala-sofa-with-chaise-gunnared-beige__0514360_pe639436_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-3",
+    "title": "KIVIK",
+    "description": "KIVIK",
+    "price": "$1149.00",
+    "category": "Living Room",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/kivik-sofa-with-chaise-tibbleby-beige-gray__1056147_pe848280_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-4",
+    "title": "LINANÄS",
+    "description": "LINANÄS",
+    "price": "$399.00",
+    "category": "Living Room",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/linanaes-sofa-with-chaise-vissle-dark-gray__1013908_pe829460_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-5",
+    "title": "FRIHETEN / KLAGSHAMN",
+    "description": "FRIHETEN / KLAGSHAMN",
+    "price": "$999.00",
+    "category": "Living Room",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/friheten-klagshamn-sleeper-sectional-3-seat-w-storage-faringe-light-gray__1360642_pe954542_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-6",
+    "title": "LINANÄS",
+    "description": "LINANÄS",
+    "price": "$299.00",
+    "category": "Living Room",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/linanaes-sofa-vissle-dark-gray__1013898_pe829450_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-0",
+    "title": "VALEVÅG",
+    "description": "VALEVÅG",
+    "price": "$299.00",
+    "category": "Bedroom",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/valevag-pocket-spring-mattress-medium-firm-white__1142852_pe881371_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-1",
+    "title": "VÅGSTRANDA",
+    "description": "VÅGSTRANDA",
+    "price": "$499.00",
+    "category": "Bedroom",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/vagstranda-pocket-spring-mattress-medium-firm-white__1142855_pe881376_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-2",
+    "title": "ÅSBYGDA",
+    "description": "ÅSBYGDA",
+    "price": "$249.00",
+    "category": "Bedroom",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/asbygda-foam-mattress-firm-white__1142848_pe881370_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-3",
+    "title": "ÅBROTTEN",
+    "description": "ÅBROTTEN",
+    "price": "$349.00",
+    "category": "Bedroom",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/abrotten-foam-mattress-medium-firm-white__1142853_pe881374_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-4",
+    "title": "VINGELEN",
+    "description": "VINGELEN",
+    "price": "$699.00",
+    "category": "Bedroom",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/vingelen-eurotop-hybrid-mattress-plush-white__1142861_pe881377_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-5",
+    "title": "VESTERÖY",
+    "description": "VESTERÖY",
+    "price": "$229.00",
+    "category": "Bedroom",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/vesteroey-pocket-spring-mattress-medium-firm-white__1142846_pe881368_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-6",
+    "title": "ÅNNELAND",
+    "description": "ÅNNELAND",
+    "price": "$599.00",
+    "category": "Bedroom",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/anneland-hybrid-mattress-firm-white__1015263_pe829963_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-0",
+    "title": "STEFAN",
+    "description": "STEFAN",
+    "price": "$35.00",
+    "category": "Dining",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/stefan-chair-brown-black__0727320_pe735593_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-1",
+    "title": "LISABO",
+    "description": "LISABO",
+    "price": "$65.00",
+    "category": "Dining",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/lisabo-chair-ash__0786549_pe763015_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-2",
+    "title": "BERGMUND",
+    "description": "BERGMUND",
+    "price": "$125.00",
+    "category": "Dining",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/bergmund-chair-black-gunnared-medium-gray__0859533_pe780957_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-3",
+    "title": "NORDVIKEN",
+    "description": "NORDVIKEN",
+    "price": "$65.00",
+    "category": "Dining",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/nordviken-chair-black__0714202_pe729964_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-4",
+    "title": "ÖSTANÖ",
+    "description": "ÖSTANÖ",
+    "price": "$25.00",
+    "category": "Dining",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/oestanoe-chair-black-remmarn-dark-gray__1119282_pe873451_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-5",
+    "title": "SKOGSTA",
+    "description": "SKOGSTA",
+    "price": "$65.00",
+    "category": "Dining",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/skogsta-chair-acacia__1343430_pe949583_s5.jpg?f=xxs"
+  },
+  {
+    "id": "ikea-6",
+    "title": "TOBIAS",
+    "description": "TOBIAS",
+    "price": "$85.00",
+    "category": "Dining",
+    "imageUrl": "https://www.ikea.com/us/en/images/products/tobias-chair-clear-chrome-plated__0727342_pe735614_s5.jpg?f=xxs"
+  }
+]
